@@ -8,6 +8,7 @@ import Enrollments from "./pages/Enrollments";
 import Grades      from "./pages/Grades";
 import Attendance  from "./pages/Attendance";
 import Reports     from "./pages/Reports";
+import ViewAll     from "./pages/ViewAll";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/grades"      element={<Grades />}      />
               <Route path="/attendance"  element={<Attendance />}  />
               <Route path="/reports"     element={<Reports />}     />
+              <Route path="/view-all"    element={<ViewAll />}     />
             </Routes>
           </main>
         </div>

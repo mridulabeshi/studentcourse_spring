@@ -38,8 +38,9 @@ function Courses() {
 
   const creditBadge = (c) => {
     const n = Number(c);
-    if (n >= 4) return "badge-purple";
+    if (n == 4) return "badge-red";
     if (n === 3) return "badge-blue";
+    if (n === 2) return "badge-amber";
     return "badge-green";
   };
 

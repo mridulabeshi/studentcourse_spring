@@ -17,4 +17,9 @@ class CourseService(
     fun delete(id: Long) = courseRepository.deleteById(id)
     
     fun searchByTitle(title: String): List<Course> = courseRepository.findByTitleContainingIgnoreCase(title)
+    
+    fun getByCourseCode(courseCode: String): Course? {
+        return courseRepository
+        .findByCourseCode(courseCode)
+    }
 }

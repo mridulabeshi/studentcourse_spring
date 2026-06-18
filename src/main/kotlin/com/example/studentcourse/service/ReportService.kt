@@ -103,12 +103,12 @@ class ReportService(
 
                 when (it.grade.uppercase()) {
 
-                    "A+" -> 10
+                    "S" -> 10
                     "A" -> 9
-                    "B+" -> 8
-                    "B" -> 7
-                    "C" -> 6
-                    "D" -> 5
+                    "B" -> 8
+                    "C" -> 7
+                    "D" -> 6
+                    "E" -> 5
 
                     else -> 0
                 }

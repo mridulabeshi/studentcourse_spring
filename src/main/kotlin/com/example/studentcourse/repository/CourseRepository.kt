@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface CourseRepository : JpaRepository<Course, Long>{
     fun findByTitleContainingIgnoreCase(title:String):List<Course>
+    fun findByCourseCode(courseCode: String): Course?
 }

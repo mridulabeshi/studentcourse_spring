@@ -2,15 +2,29 @@ import { useState } from "react";
 import api from "../services/api";
 import { useToast } from "../components/Toast";
 
-const GRADE_OPTIONS = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"];
+// Must match backend: S=10, A=9, B=8, C=7, D=6, E=5
+const GRADE_OPTIONS = [
+  { value: "S", label: "S — Outstanding (10)", color: "badge-purple" },
+  { value: "A", label: "A — Excellent (9)",    color: "badge-green"  },
+  { value: "B", label: "B — Good (8)",          color: "badge-blue"   },
+  { value: "C", label: "C — Average (7)",       color: "badge-amber"  },
+  { value: "D", label: "D — Below Avg (6)",     color: "badge-red"    },
+  { value: "E", label: "E — Fail (5)",          color: "badge-red"    },
+];
 
 const gradeColor = (g) => {
-  if (!g) return "badge-blue";
-  if (g.startsWith("A")) return "badge-green";
-  if (g.startsWith("B")) return "badge-blue";
-  if (g.startsWith("C")) return "badge-amber";
-  return "badge-red";
+  switch (g?.toUpperCase()) {
+    case "S": return "badge-purple";
+    case "A": return "badge-green";
+    case "B": return "badge-blue";
+    case "C": return "badge-amber";
+    case "D":
+    case "E": return "badge-red";
+    default:  return "badge-blue";
+  }
 };
+
+const gradeScore = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5 };
 
 function Grades() {
   const [enrollmentId, setEnrollmentId] = useState("");
@@ -34,7 +48,10 @@ function Grades() {
         toast("Grade saved successfully");
         setEnrollmentId(""); setGrade(""); setSemester("");
       })
-      .catch(() => toast("Failed to save grade", "error"))
+      .catch((err) => {
+        const msg = err?.response?.data?.message || "Failed to save grade. Check enrollment ID.";
+        toast(msg, "error");
+      })
       .finally(() => setSubmitting(false));
   };
 
@@ -43,7 +60,7 @@ function Grades() {
       <h1 className="page-title">Grades</h1>
       <p className="page-subtitle">Record student grades per enrollment</p>
 
-      <div className="card" style={{ maxWidth: 540 }}>
+      <div className="card" style={{ maxWidth: 560 }}>
         <p className="section-title">Post a Grade</p>
 
         <div className="flex flex-col gap-16 mb-24">
@@ -56,6 +73,9 @@ function Grades() {
               value={enrollmentId}
               onChange={(e) => setEnrollmentId(e.target.value)}
             />
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              Find enrollment IDs in View Records → Enrollments
+            </span>
           </div>
 
           <div className="form-row">
@@ -68,7 +88,7 @@ function Grades() {
               >
                 <option value="">Select grade…</option>
                 {GRADE_OPTIONS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
+                  <option key={g.value} value={g.value}>{g.label}</option>
                 ))}
               </select>
             </div>
@@ -84,13 +104,27 @@ function Grades() {
             </div>
           </div>
 
-          {/* Grade Preview */}
+          {/* Grade preview */}
           {grade && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Preview:</span>
-              <span className={`badge ${gradeColor(grade)}`} style={{ fontSize: "0.9rem", padding: "4px 14px" }}>
+            <div style={{
+              alignItems: "center",
+              background: "var(--bg)",
+              borderRadius: "var(--radius-sm)",
+              display: "flex",
+              gap: 16,
+              padding: "12px 16px",
+            }}>
+              <span className={`badge ${gradeColor(grade)}`} style={{ fontSize: "1rem", padding: "4px 16px" }}>
                 {grade}
               </span>
+              <div>
+                <div style={{ fontSize: "0.85rem", color: "var(--text)", fontWeight: 600 }}>
+                  Score: {gradeScore[grade]} / 10
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                  {GRADE_OPTIONS.find(o => o.value === grade)?.label.split("—")[1]?.trim()}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -102,6 +136,28 @@ function Grades() {
         >
           {submitting ? "Saving..." : "🏅 Save Grade"}
         </button>
+      </div>
+
+      {/* Grade scale reference */}
+      <div className="card mt-16" style={{ maxWidth: 560 }}>
+        <p className="section-title">Grade Scale Reference</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {GRADE_OPTIONS.map((g) => (
+            <div key={g.value} style={{
+              alignItems: "center",
+              background: "var(--bg)",
+              borderRadius: "var(--radius-sm)",
+              display: "flex",
+              gap: 8,
+              padding: "8px 12px",
+            }}>
+              <span className={`badge ${g.color}`}>{g.value}</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                {g.label.split("—")[1]?.trim()}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

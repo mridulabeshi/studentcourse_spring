@@ -8,6 +8,7 @@ const navItems = [
   { to: "/grades",      icon: "🏅", label: "Grades"      },
   { to: "/attendance",  icon: "📋", label: "Attendance"  },
   { to: "/reports",     icon: "📊", label: "Reports"     },
+  { to: "/view-all",   icon: "🗂️", label: "View Records" },
 ];
 
 function Navbar() {

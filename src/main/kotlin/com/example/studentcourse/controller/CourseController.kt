@@ -42,4 +42,9 @@ class CourseController(
     fun search(@RequestParam title: String): List<Course> { 
         return courseService.searchByTitle(title)
     }
+    
+    @GetMapping("/code/{courseCode}")
+    fun getByCourseCode(@PathVariable courseCode: String): Course? {
+        return courseService.getByCourseCode(courseCode)
+    }
 }
