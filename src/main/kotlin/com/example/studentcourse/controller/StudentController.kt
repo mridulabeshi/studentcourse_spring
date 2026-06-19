@@ -23,7 +23,7 @@ class StudentController(
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody student: Student): Student {
         val existing = studentService.getStudentById(id)
-        val updated = existing.copy(name = student.name, email = student.email)
+        val updated = existing.copy(name = student.name, email = student.email,department = student.department)
         return studentService.save(updated)
     }
     

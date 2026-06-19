@@ -247,6 +247,9 @@ body {
 .badge-amber  { background: var(--amber-dim);  color: var(--amber);  }
 .badge-red    { background: var(--red-dim);    color: var(--red);    }
 .badge-blue   { background: var(--blue-dim);   color: var(--blue);   }
+.badge-white  { background: #ffffff14;         color: #e8eaf0;       }
+.badge-yellow { background: #fde04718;         color: #fde047;       }
+.badge-cyan   { background: #06b6d418;         color: #06b6d4;       }
 
 /* ── Stat Cards ─────────────────────────────────────────────── */
 .stat-grid {
