@@ -4,6 +4,7 @@ import Navbar      from "./components/Navbar";
 import Dashboard   from "./pages/Dashboard";
 import Students    from "./pages/Students";
 import Courses     from "./pages/Courses";
+import Prerequisites from "./pages/Prerequisites";
 import Enrollments from "./pages/Enrollments";
 import Grades      from "./pages/Grades";
 import Attendance  from "./pages/Attendance";
@@ -21,6 +22,7 @@ function App() {
               <Route path="/"            element={<Dashboard />}   />
               <Route path="/students"    element={<Students />}    />
               <Route path="/courses"     element={<Courses />}     />
+              <Route path="/prerequisites" element={<Prerequisites />} />
               <Route path="/enrollments" element={<Enrollments />} />
               <Route path="/grades"      element={<Grades />}      />
               <Route path="/attendance"  element={<Attendance />}  />

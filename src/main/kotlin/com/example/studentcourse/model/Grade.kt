@@ -11,7 +11,7 @@ data class Grade(
         
     @OneToOne
     @JoinColumn(name = "enrollment_id")
-    var enrollment: Enrollment,
+    var enrollment: Enrollment?=null ,
     
     var grade:String ="",
     var semester:String =""

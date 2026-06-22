@@ -1,5 +1,6 @@
 package com.example.studentcourse.model
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import jakarta.persistence.*
 
 @Entity
@@ -10,11 +11,13 @@ data class CoursePrerequisite(
     val id: Long = 0,
         
     @ManyToOne
-    @JoinColumn(name = "course_id")
-    var course: Course? = null,
-        
-    @ManyToOne
-    @JoinColumn(name = "prerequisite_course_id")
-    var prerequisiteCourse: Course? = null
+@JoinColumn(name = "course_id")
+@JsonIgnoreProperties("prerequisites")
+var course: Course? = null,
+
+@ManyToOne  
+@JoinColumn(name = "prerequisite_course_id")
+@JsonIgnoreProperties("prerequisites")
+var prerequisiteCourse: Course? = null
 )
 

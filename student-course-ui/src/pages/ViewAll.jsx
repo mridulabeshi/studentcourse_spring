@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import { DeptBadge } from "./Students";
+import { DeptBadge } from "../components/DeptBadge";
 
 const TABS = [
   { key: "enrollments", label: "Enrollments", icon: "🔗" },

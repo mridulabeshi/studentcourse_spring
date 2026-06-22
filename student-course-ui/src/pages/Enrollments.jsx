@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useToast } from "../components/Toast";
-import { DeptBadge } from "./Students";
+import { DeptBadge } from "../components/DeptBadge";
 
 function Enrollments() {
   const [students, setStudents]       = useState([]);
