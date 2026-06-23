@@ -5,6 +5,7 @@ const NAV = {
   ADMIN: [
     { to: "/admin/dashboard",     label: "Dashboard"     },
     { to: "/admin/students",      label: "Students"      },
+    { to: "/admin/teachers",      label: "Teachers"      },
     { to: "/admin/courses",       label: "Courses"       },
     { to: "/admin/enrollments",   label: "Enrollments"   },
     { to: "/admin/prerequisites", label: "Prerequisites" },

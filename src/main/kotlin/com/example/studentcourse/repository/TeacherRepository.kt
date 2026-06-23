@@ -7,4 +7,5 @@ interface TeacherRepository :
     JpaRepository<Teacher, Long> {
 
     fun findByUserId(userId: Long): Teacher?
+    fun findByEmployeeCode(employeeCode: String): Teacher?
 }

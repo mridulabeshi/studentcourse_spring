@@ -1,37 +1,43 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useToast } from "../../components/Toast";
+import { useAuth } from "../../context/AuthContext";
 import { DeptBadge } from "../../components/DeptBadge";
 
-// GET /teacher/courses  -> List<Course>
-// GET /enrollments/course/{courseId} -> List<Enrollment>
+// GET /teacher-courses/teacher/{teacherId} -> List<TeacherCourse { id, teacher, course }>
+// GET /enrollments/course/{courseId}        -> List<Enrollment>
 function TeacherStudents() {
+  const { user } = useAuth();
   const toast = useToast();
-  const [courses, setCourses]       = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [enrollments, setEnrollments] = useState([]);
-  const [loading, setLoading]       = useState(false);
-  const [search, setSearch]         = useState("");
+
+  const [teacherCourses, setTeacherCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [enrollments, setEnrollments]   = useState([]);
+  const [loading, setLoading]           = useState(false);
+  const [search, setSearch]             = useState("");
 
   useEffect(() => {
-    api.get("/teacher/courses").then((r) => setCourses(r.data)).catch(() => {});
-  }, []);
+    if (!user?.teacherId) return;
+    api.get(`/teacher-courses/teacher/${user.teacherId}`)
+      .then((r) => setTeacherCourses(r.data))
+      .catch(() => toast("Failed to load your courses", "error"));
+  }, [user]);
 
   useEffect(() => {
-    if (!selectedCourse) { setEnrollments([]); return; }
+    if (!selectedCourseId) { setEnrollments([]); return; }
     setLoading(true);
-    api.get(`/enrollments/course/${selectedCourse}`)
+    api.get(`/enrollments/course/${selectedCourseId}`)
       .then((r) => setEnrollments(r.data))
       .catch(() => toast("Failed to load students", "error"))
       .finally(() => setLoading(false));
-  }, [selectedCourse]);
+  }, [selectedCourseId]);
 
   const filtered = enrollments.filter((e) => {
     const q = search.toLowerCase();
     return !q || e.student?.name?.toLowerCase().includes(q) || e.student?.rollNo?.toLowerCase().includes(q);
   });
 
-  const selectedCourseName = courses.find((c) => String(c.id) === String(selectedCourse));
+  const activeCourse = teacherCourses.find((tc) => String(tc.course?.id) === String(selectedCourseId));
 
   return (
     <div>
@@ -40,37 +46,37 @@ function TeacherStudents() {
 
       {/* Course cards */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-        {courses.map((c) => (
-          <button key={c.id} onClick={() => setSelectedCourse(String(c.id))} style={{
-            alignItems: "flex-start", background: String(c.id) === selectedCourse ? "var(--accent-dim)" : "var(--bg-card)",
-            border: `1px solid ${String(c.id) === selectedCourse ? "var(--accent)" : "var(--border)"}`,
-            borderRadius: "var(--radius-sm)", cursor: "pointer", display: "flex",
-            flexDirection: "column", fontFamily: "var(--font-body)", gap: 4,
-            minWidth: 160, padding: "12px 14px", transition: "all 0.15s", textAlign: "left",
+        {teacherCourses.map((tc) => (
+          <button key={tc.id} onClick={() => setSelectedCourseId(String(tc.course?.id))} style={{
+            alignItems: "flex-start", textAlign: "left", display: "flex", flexDirection: "column", gap: 4,
+            minWidth: 160, padding: "12px 16px", cursor: "pointer", fontFamily: "var(--font-body)",
+            borderRadius: "var(--radius-sm)", transition: "all 0.15s",
+            background: String(tc.course?.id) === selectedCourseId ? "var(--accent-dim)" : "var(--bg-card)",
+            border: `1px solid ${String(tc.course?.id) === selectedCourseId ? "var(--accent)" : "var(--border)"}`,
+            color: String(tc.course?.id) === selectedCourseId ? "var(--accent)" : "var(--text-muted)",
           }}>
-            <span style={{ fontFamily: "monospace", color: String(c.id) === selectedCourse ? "var(--accent)" : "var(--text-muted)", fontSize: "0.75rem", fontWeight: 700 }}>{c.courseCode}</span>
-            <span style={{ color: String(c.id) === selectedCourse ? "var(--accent)" : "var(--text)", fontSize: "0.85rem", fontWeight: 500 }}>{c.title}</span>
-            <span className="badge badge-blue" style={{ marginTop: 4 }}>{c.credits} cr</span>
+            <span style={{ fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700 }}>{tc.course?.courseCode}</span>
+            <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{tc.course?.title}</span>
+            <span className="badge badge-blue" style={{ marginTop: 4 }}>{tc.course?.credits} cr</span>
           </button>
         ))}
-        {courses.length === 0 && (
+        {teacherCourses.length === 0 && (
           <div className="empty-state"><div className="empty-icon">&#x1F4DA;</div><p>No courses assigned yet.</p></div>
         )}
       </div>
 
-      {selectedCourse && (
+      {selectedCourseId && (
         <div className="card">
           <div className="flex items-center justify-between mb-16">
             <div className="flex items-center gap-12">
               <p className="section-title" style={{ marginBottom: 0 }}>
-                {selectedCourseName ? `${selectedCourseName.courseCode} — ${selectedCourseName.title}` : "Students"}
+                {activeCourse ? `${activeCourse.course?.courseCode} — ${activeCourse.course?.title}` : "Students"}
               </p>
               <span className="badge badge-purple">{filtered.length} students</span>
             </div>
             <input className="form-input" placeholder="Search name or roll no..." value={search}
               onChange={(e) => setSearch(e.target.value)} style={{ maxWidth: 260 }} />
           </div>
-
           {loading ? (
             <div className="empty-state"><p>Loading students...</p></div>
           ) : filtered.length === 0 ? (
@@ -96,7 +102,7 @@ function TeacherStudents() {
         </div>
       )}
 
-      {!selectedCourse && courses.length > 0 && (
+      {!selectedCourseId && teacherCourses.length > 0 && (
         <div className="empty-state"><div className="empty-icon">&#x1F4CB;</div><p>Select a course above to view its students.</p></div>
       )}
     </div>

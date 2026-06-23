@@ -1,4 +1,4 @@
-package com.example.studentcourse.service
+package com.example.studentcourse.security
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys

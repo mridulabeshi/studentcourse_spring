@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 // Admin
 import AdminDashboard     from "./pages/admin/Dashboard";
 import AdminStudents      from "./pages/admin/Students";
+import AdminTeachers      from "./pages/admin/Teachers";
 import AdminCourses       from "./pages/admin/Courses";
 import AdminEnrollments   from "./pages/admin/Enrollments";
 import AdminPrerequisites from "./pages/admin/Prerequisites";
@@ -61,6 +62,7 @@ function AppRoutes() {
         {/* Admin routes */}
         <Route path="/admin/dashboard"     element={<ProtectedRoute role="ADMIN"><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/students"      element={<ProtectedRoute role="ADMIN"><AdminStudents /></ProtectedRoute>} />
+        <Route path="/admin/teachers"      element={<ProtectedRoute role="ADMIN"><AdminTeachers /></ProtectedRoute>} />
         <Route path="/admin/courses"       element={<ProtectedRoute role="ADMIN"><AdminCourses /></ProtectedRoute>} />
         <Route path="/admin/enrollments"   element={<ProtectedRoute role="ADMIN"><AdminEnrollments /></ProtectedRoute>} />
         <Route path="/admin/prerequisites" element={<ProtectedRoute role="ADMIN"><AdminPrerequisites /></ProtectedRoute>} />

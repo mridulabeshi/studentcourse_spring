@@ -47,7 +47,7 @@ function Login() {
             <label className="form-label">Username / Roll No</label>
             <input
               className="form-input"
-              placeholder="e.g. WHM1001 or admin"
+              placeholder="Enter username or roll number"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
@@ -81,20 +81,6 @@ function Login() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </div>
-
-        {/* Role hints */}
-        <div style={styles.hintsLabel}>Quick fill by role</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {ROLE_HINTS.map(({ role, username: u, hint }) => (
-            <button key={role} onClick={() => fill(u)} style={styles.hintBtn}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontWeight: 600, color: "var(--text-soft)", fontSize: "0.82rem" }}>{role}</span>
-                <span style={{ fontFamily: "monospace", fontSize: "0.78rem", color: "var(--accent)" }}>{u}</span>
-              </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>{hint}</div>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -103,22 +89,17 @@ function Login() {
 const styles = {
   page: {
     alignItems: "center", background: "var(--bg)", display: "flex",
-    justifyContent: "center", minHeight: "100vh", padding: 24,
+    justifyContent: "center", minHeight: "100vh", padding: 32,
   },
   card: {
     background: "var(--bg-card)", border: "1px solid var(--border)",
     borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow)",
-    padding: "36px 32px", width: "100%", maxWidth: 400,
+    padding: "36px 32px", minHeight: "100%", maxWidth: 400,
   },
   header: { textAlign: "center", marginBottom: 28 },
   title: { fontFamily: "var(--font-display)", fontSize: "1.6rem", fontWeight: 700, color: "var(--text)", margin: "8px 0 4px" },
   subtitle: { color: "var(--text-muted)", fontSize: "0.85rem" },
-  hintsLabel: { color: "var(--text-muted)", fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.08em", marginBottom: 8, textTransform: "uppercase" },
-  hintBtn: {
-    background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
-    cursor: "pointer", fontFamily: "var(--font-body)", padding: "10px 12px",
-    textAlign: "left", transition: "border-color 0.15s", width: "100%",
-  },
+
 };
 
 export default Login;

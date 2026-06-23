@@ -1,6 +1,5 @@
 package com.example.studentcourse.security
 
-import com.example.studentcourse.service.JwtService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

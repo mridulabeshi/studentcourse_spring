@@ -49,13 +49,7 @@ class AuthService(
         return when(user.role) {
 
             "STUDENT" -> {
-
-                val student =
-                    studentRepository
-                        .findByUserId(
-                            user.id
-                        )
-
+                val student = studentRepository.findByRollNo(request.username)  // find by rollNo
                 LoginResponse(
                     token = token,
                     role = user.role,
@@ -63,14 +57,8 @@ class AuthService(
                 )
             }
 
-            "TEACHER" -> {
-
-                val teacher =
-                    teacherRepository
-                        .findByUserId(
-                            user.id
-                        )
-
+           "TEACHER" -> {
+                val teacher = teacherRepository.findByEmployeeCode(request.username)
                 LoginResponse(
                     token = token,
                     role = user.role,

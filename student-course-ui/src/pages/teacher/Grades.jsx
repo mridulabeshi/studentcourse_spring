@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useToast } from "../../components/Toast";
+import { useAuth } from "../../context/AuthContext";
 import { DeptBadge } from "../../components/DeptBadge";
+
+// Real endpoints:
+// GET  /teacher-courses/teacher/{teacherId} -> List<TeacherCourse>
+// GET  /enrollments/course/{courseId}       -> List<Enrollment>
+// POST /grades                              -> save grade (any authenticated user)
 
 const GRADE_OPTIONS = [
   { value: "S", label: "S — Outstanding", score: 10, color: "badge-purple" },
@@ -11,35 +17,39 @@ const GRADE_OPTIONS = [
   { value: "D", label: "D — Below Avg",   score: 6,  color: "badge-red"    },
   { value: "E", label: "E — Fail",        score: 5,  color: "badge-red"    },
 ];
-const gradeMap   = Object.fromEntries(GRADE_OPTIONS.map((g) => [g.value, g]));
-const gradeColor = (g) => ({ S:"badge-purple", A:"badge-green", B:"badge-blue", C:"badge-amber", D:"badge-red", E:"badge-red" }[g?.toUpperCase()] ?? "badge-blue");
+const gradeMap = Object.fromEntries(GRADE_OPTIONS.map((g) => [g.value, g]));
 
-// POST /teacher/grades { enrollmentId, grade, semester }
 function TeacherGrades() {
+  const { user } = useAuth();
   const toast = useToast();
-  const [courses, setCourses]         = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [enrollments, setEnrollments] = useState([]);
+
+  const [teacherCourses, setTeacherCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [enrollments, setEnrollments]   = useState([]);
   const [enrollmentId, setEnrollmentId] = useState("");
-  const [grade, setGrade]             = useState("");
-  const [semester, setSemester]       = useState("");
-  const [submitting, setSubmitting]   = useState(false);
+  const [grade, setGrade]               = useState("");
+  const [semester, setSemester]         = useState("");
+  const [submitting, setSubmitting]     = useState(false);
 
   useEffect(() => {
-    api.get("/teacher/courses").then((r) => setCourses(r.data)).catch(() => {});
-  }, []);
+    if (!user?.teacherId) return;
+    api.get(`/teacher-courses/teacher/${user.teacherId}`)
+      .then((r) => setTeacherCourses(r.data))
+      .catch(() => toast("Failed to load your courses", "error"));
+  }, [user]);
 
   useEffect(() => {
-    if (!selectedCourse) { setEnrollments([]); setEnrollmentId(""); return; }
-    api.get(`/enrollments/course/${selectedCourse}`)
+    if (!selectedCourseId) { setEnrollments([]); setEnrollmentId(""); return; }
+    api.get(`/enrollments/course/${selectedCourseId}`)
       .then((r) => setEnrollments(r.data))
       .catch(() => toast("Failed to load enrollments", "error"));
-  }, [selectedCourse]);
+  }, [selectedCourseId]);
 
   const saveGrade = () => {
     if (!enrollmentId || !grade || !semester.trim()) { toast("All fields required", "warn"); return; }
     setSubmitting(true);
-    api.post("/teacher/grades", { enrollmentId: Number(enrollmentId), grade, semester })
+    // POST /grades — same endpoint used by admin, just authenticated
+    api.post("/grades", { enrollmentId: Number(enrollmentId), grade, semester })
       .then(() => { toast("Grade saved"); setEnrollmentId(""); setGrade(""); setSemester(""); })
       .catch((e) => toast(e?.response?.data?.message ?? "Failed to save grade", "error"))
       .finally(() => setSubmitting(false));
@@ -59,9 +69,13 @@ function TeacherGrades() {
           <div className="flex flex-col gap-16 mb-16">
             <div className="form-group">
               <label className="form-label">Your Course</label>
-              <select className="form-select" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
+              <select className="form-select" value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}>
                 <option value="">Select course...</option>
-                {courses.map((c) => <option key={c.id} value={c.id}>{c.courseCode} — {c.title}</option>)}
+                {teacherCourses.map((tc) => (
+                  <option key={tc.id} value={tc.course?.id}>
+                    {tc.course?.courseCode} — {tc.course?.title}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -71,7 +85,9 @@ function TeacherGrades() {
                 <select className="form-select" value={enrollmentId} onChange={(e) => setEnrollmentId(e.target.value)}>
                   <option value="">Select student...</option>
                   {enrollments.map((e) => (
-                    <option key={e.id} value={e.id}>#{e.id} — {e.student?.rollNo} {e.student?.name}</option>
+                    <option key={e.id} value={e.id}>
+                      #{e.id} — {e.student?.rollNo} {e.student?.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -81,7 +97,7 @@ function TeacherGrades() {
               <div style={{ display: "flex", gap: 8, alignItems: "center", background: "var(--bg)", borderRadius: "var(--radius-sm)", padding: "10px 12px", fontSize: "0.82rem" }}>
                 <DeptBadge dept={selectedEnrollment.student?.department} />
                 <span style={{ color: "var(--text)", fontWeight: 600 }}>{selectedEnrollment.student?.name}</span>
-                <span style={{ color: "var(--text-muted)" }}>{selectedEnrollment.student?.rollNo}</span>
+                <span style={{ color: "var(--text-muted)", fontFamily: "monospace" }}>{selectedEnrollment.student?.rollNo}</span>
               </div>
             )}
 
@@ -99,7 +115,7 @@ function TeacherGrades() {
               </div>
             </div>
           </div>
-          <button className="btn btn-primary btn-full" onClick={saveGrade} disabled={submitting || !enrollmentId}>
+          <button className="btn btn-primary btn-full" onClick={saveGrade} disabled={submitting || !enrollmentId || !grade}>
             {submitting ? "Saving..." : "Save Grade"}
           </button>
         </div>
@@ -118,7 +134,7 @@ function TeacherGrades() {
                 </div>
               </div>
             ) : (
-              <div className="empty-state" style={{ padding: "12px 0" }}><p>Select student and grade to preview.</p></div>
+              <div className="empty-state" style={{ padding: "12px 0" }}><p>Select a student and grade to preview.</p></div>
             )}
           </div>
           <div className="card">

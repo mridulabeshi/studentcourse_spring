@@ -1,39 +1,40 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 import { DeptBadge } from "../../components/DeptBadge";
 
 const gradeColor = (g) => ({ S:"badge-purple", A:"badge-green", B:"badge-blue", C:"badge-amber", D:"badge-red", E:"badge-red" }[g?.toUpperCase()] ?? "badge-blue");
 const gradeScore = { S:10, A:9, B:8, C:7, D:6, E:5 };
 const scoreColor = (s) => Number(s) >= 8 ? "var(--green)" : Number(s) >= 6 ? "var(--amber)" : "var(--red)";
 
-// GET /teacher/courses -> List<Course>
-// GET /enrollments/course/{courseId} -> List<Enrollment>
-// GET /reports/performance/{studentId} -> { studentId, averageScore }
-// GET /grades/student/{studentId} -> List<Grade>
-// GET /reports/attendance/{enrollmentId} -> { enrollmentId, percentage }
 function TeacherReports() {
-  const [courses, setCourses]             = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
+  const { user } = useAuth();
+
+  const [teacherCourses, setTeacherCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
   const [enrollments, setEnrollments]     = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [performance, setPerformance]     = useState(null);
   const [grades, setGrades]               = useState([]);
   const [attendance, setAttendance]       = useState(null);
   const [loading, setLoading]             = useState(false);
 
   useEffect(() => {
-    api.get("/teacher/courses").then((r) => setCourses(r.data)).catch(() => {});
-  }, []);
+    if (!user?.teacherId) return;
+    api.get(`/teacher-courses/teacher/${user.teacherId}`)
+      .then((r) => setTeacherCourses(r.data))
+      .catch(() => {});
+  }, [user]);
 
   useEffect(() => {
-    if (!selectedCourse) { setEnrollments([]); setSelectedStudent(null); return; }
-    api.get(`/enrollments/course/${selectedCourse}`)
+    if (!selectedCourseId) { setEnrollments([]); setSelectedEnrollment(null); return; }
+    api.get(`/enrollments/course/${selectedCourseId}`)
       .then((r) => setEnrollments(r.data))
       .catch(() => {});
-  }, [selectedCourse]);
+  }, [selectedCourseId]);
 
   const loadStudentReport = async (enrollment) => {
-    setSelectedStudent(enrollment);
+    setSelectedEnrollment(enrollment);
     setLoading(true); setPerformance(null); setGrades([]); setAttendance(null);
     const sid = enrollment.student?.id;
     const eid = enrollment.id;
@@ -51,28 +52,32 @@ function TeacherReports() {
   };
 
   const pct = attendance?.percentage ?? 0;
+  const activeCourse = teacherCourses.find((tc) => String(tc.course?.id) === String(selectedCourseId));
 
   return (
     <div>
       <h1 className="page-title">Reports</h1>
-      <p className="page-subtitle">Student performance and attendance in your courses</p>
+      <p className="page-subtitle">Student performance in your courses</p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 20 }}>
-        {/* Left: course + student picker */}
+      <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 20 }}>
+        {/* Left panel */}
         <div className="flex flex-col gap-16">
           <div className="card">
-            <p className="section-title">Select Course</p>
+            <p className="section-title">Your Courses</p>
             <div className="flex flex-col gap-8">
-              {courses.map((c) => (
-                <button key={c.id} onClick={() => setSelectedCourse(String(c.id))} style={{
-                  background: String(c.id) === selectedCourse ? "var(--accent-dim)" : "transparent",
-                  border: `1px solid ${String(c.id) === selectedCourse ? "var(--accent)" : "var(--border)"}`,
-                  borderRadius: "var(--radius-sm)", color: String(c.id) === selectedCourse ? "var(--accent)" : "var(--text-muted)",
-                  cursor: "pointer", fontFamily: "var(--font-body)", fontSize: "0.85rem",
+              {teacherCourses.length === 0 && (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No courses assigned.</p>
+              )}
+              {teacherCourses.map((tc) => (
+                <button key={tc.id} onClick={() => setSelectedCourseId(String(tc.course?.id))} style={{
+                  background: String(tc.course?.id) === selectedCourseId ? "var(--accent-dim)" : "transparent",
+                  border: `1px solid ${String(tc.course?.id) === selectedCourseId ? "var(--accent)" : "var(--border)"}`,
+                  borderRadius: "var(--radius-sm)", cursor: "pointer", fontFamily: "var(--font-body)",
                   padding: "9px 12px", textAlign: "left", transition: "all 0.15s", width: "100%",
+                  color: String(tc.course?.id) === selectedCourseId ? "var(--accent)" : "var(--text-muted)",
                 }}>
-                  <span style={{ fontFamily: "monospace", fontSize: "0.75rem", display: "block" }}>{c.courseCode}</span>
-                  {c.title}
+                  <span style={{ fontFamily: "monospace", fontSize: "0.72rem", display: "block" }}>{tc.course?.courseCode}</span>
+                  <span style={{ fontSize: "0.85rem" }}>{tc.course?.title}</span>
                 </button>
               ))}
             </div>
@@ -80,12 +85,12 @@ function TeacherReports() {
 
           {enrollments.length > 0 && (
             <div className="card">
-              <p className="section-title">Select Student</p>
+              <p className="section-title">Students</p>
               <div className="flex flex-col gap-8">
                 {enrollments.map((e) => (
                   <button key={e.id} onClick={() => loadStudentReport(e)} style={{
-                    background: selectedStudent?.id === e.id ? "var(--bg-hover)" : "transparent",
-                    border: `1px solid ${selectedStudent?.id === e.id ? "var(--accent)" : "var(--border)"}`,
+                    background: selectedEnrollment?.id === e.id ? "var(--bg-hover)" : "transparent",
+                    border: `1px solid ${selectedEnrollment?.id === e.id ? "var(--accent)" : "var(--border)"}`,
                     borderRadius: "var(--radius-sm)", cursor: "pointer", fontFamily: "var(--font-body)",
                     padding: "9px 12px", textAlign: "left", transition: "all 0.15s", width: "100%",
                   }}>
@@ -103,45 +108,52 @@ function TeacherReports() {
           )}
         </div>
 
-        {/* Right: report panel */}
+        {/* Right: report */}
         <div>
-          {!selectedStudent && (
-            <div className="card" style={{ height: "100%" }}>
+          {!selectedEnrollment && (
+            <div className="card" style={{ minHeight: 300 }}>
               <div className="empty-state">
                 <div className="empty-icon">&#x1F4C8;</div>
-                <p>Select a course, then a student to view their report.</p>
+                <p>Select a course then a student to view their report.</p>
               </div>
             </div>
           )}
 
           {loading && <div className="card"><div className="empty-state"><p>Generating report...</p></div></div>}
 
-          {selectedStudent && !loading && performance && (
+          {selectedEnrollment && !loading && performance && (
             <div className="flex flex-col gap-16">
               {/* Identity */}
               <div className="card">
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <DeptBadge dept={selectedStudent.student?.department} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--text)" }}>{selectedStudent.student?.name}</div>
-                    <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{selectedStudent.student?.rollNo} &nbsp;·&nbsp; {selectedStudent.student?.email}</div>
+                <div style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <DeptBadge dept={selectedEnrollment.student?.department} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "var(--text)" }}>{selectedEnrollment.student?.name}</div>
+                      <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{selectedEnrollment.student?.rollNo} · {selectedEnrollment.student?.email}</div>
+                    </div>
                   </div>
+                  {activeCourse && (
+                    <span style={{ fontFamily: "monospace", color: "var(--accent)", fontWeight: 600, fontSize: "0.82rem" }}>
+                      {activeCourse.course?.courseCode}
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Stats */}
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                <div className="stat-card" style={{ "--accent-color": scoreColor(performance.averageScore), flex: 1, minWidth: 130 }}>
+                <div className="stat-card" style={{ "--accent-color": scoreColor(performance.averageScore), flex: 1, minWidth: 120 }}>
                   <span className="stat-icon">&#x1F4CA;</span>
                   <div className="stat-value">{Number(performance.averageScore).toFixed(1)}</div>
                   <div className="stat-label">Avg Score / 10</div>
                 </div>
-                <div className="stat-card" style={{ "--accent-color": pct >= 75 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)", flex: 1, minWidth: 130 }}>
+                <div className="stat-card" style={{ "--accent-color": pct >= 75 ? "var(--green)" : pct >= 50 ? "var(--amber)" : "var(--red)", flex: 1, minWidth: 120 }}>
                   <span className="stat-icon">&#x1F4CB;</span>
                   <div className="stat-value">{pct.toFixed(0)}%</div>
                   <div className="stat-label">Attendance</div>
                 </div>
-                <div className="stat-card" style={{ "--accent-color": "var(--blue)", flex: 1, minWidth: 130 }}>
+                <div className="stat-card" style={{ "--accent-color": "var(--blue)", flex: 1, minWidth: 120 }}>
                   <span className="stat-icon">&#x1F3C5;</span>
                   <div className="stat-value">{grades.length}</div>
                   <div className="stat-label">Grades</div>
