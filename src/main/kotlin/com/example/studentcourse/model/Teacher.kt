@@ -3,19 +3,17 @@ package com.example.studentcourse.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "students")
-data class Student(    
+@Table(name = "teachers")
+data class Teacher(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-    
-    @Column(unique = true, nullable = false)
-    var rollNo: String = "",
-    var department: String = "",
-    
+
+    var employeeCode: String = "",
+
     var name: String = "",
-    var email: String = "",
-    
+
     @OneToOne
     @JoinColumn(name = "user_id")
     var user: User? = null

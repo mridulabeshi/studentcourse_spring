@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
-import { useToast } from "../components/Toast";
-import { DEPT_OPTIONS, DEPT_ICONS, DeptBadge } from "../components/DeptBadge";
+import api from "../../services/api";
+import { useToast } from "../../components/Toast";
+import { DEPT_OPTIONS, DEPT_ICONS, DeptBadge } from "../../components/DeptBadge";
 
 const deptMap = Object.fromEntries(DEPT_OPTIONS.map((d) => [d.value, d]));
 

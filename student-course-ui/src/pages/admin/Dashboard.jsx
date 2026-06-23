@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 
 const statConfig = [
   { key: "students",    label: "Students",    icon: "👤", color: "#6c63ff" },

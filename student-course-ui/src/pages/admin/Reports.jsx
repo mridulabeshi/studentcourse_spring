@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
-import { DeptBadge } from "../components/DeptBadge";
+import api from "../../services/api";
+import { DeptBadge } from "../../components/DeptBadge";
 
 // Grade.kt: { id, enrollment: { id, student: {...}, course: {...} }, grade, semester }
 // Grade uses @OneToOne on enrollment — one grade per enrollment max

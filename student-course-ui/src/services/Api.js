@@ -5,11 +5,21 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Optional: global error interceptor
+// Attach JWT to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Redirect to login on 401
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    console.error("API Error:", err?.response?.data || err.message);
+    if (err?.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = "/login";
+    }
     return Promise.reject(err);
   }
 );

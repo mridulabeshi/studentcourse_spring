@@ -2,17 +2,21 @@ package com.example.studentcourse.service
 
 import com.example.studentcourse.dto.EnrollmentRequest
 import com.example.studentcourse.model.Enrollment
-import com.example.studentcourse.repository.CourseRepository
-import com.example.studentcourse.repository.EnrollmentRepository
-import com.example.studentcourse.repository.StudentRepository
+import com.example.studentcourse.repository.*
 import org.springframework.stereotype.Service
 
 @Service
 class EnrollmentService (
     private val studentRepository: StudentRepository,
     private val courseRepository: CourseRepository,
-    private val enrollmentRepository: EnrollmentRepository
+    private val enrollmentRepository: EnrollmentRepository,
+    private val prerequisiteRepository: CoursePrerequisiteRepository,
+    private val gradeRepository: GradeRepository
 ) {
+    private fun isPassingGrade(grade: String): Boolean {
+        return grade.uppercase() != "F"
+    }
+    
     fun enroll(request: EnrollmentRequest): Enrollment {
         val student = studentRepository.findById(request.studentId).orElseThrow { RuntimeException("Student not found") }
         val course = courseRepository.findById(request.courseId).orElseThrow { RuntimeException("Course not found") }
@@ -22,6 +26,28 @@ class EnrollmentService (
                 "Student already enrolled in this course"
             )
         }
+        
+        val prerequisites =prerequisiteRepository.findByCourseId(course.id)
+        
+        for (prereq in prerequisites) {
+
+    val completed =gradeRepository
+            .findByEnrollmentStudentId(student.id)
+            .any {
+                it.enrollment?.course?.id == prereq.prerequisiteCourse?.id
+                &&
+                isPassingGrade(it.grade)
+            }
+
+    if (!completed) {
+
+        throw RuntimeException(
+            "Prerequisite not completed: ${
+                prereq.prerequisiteCourse?.title
+            }"
+        )
+    }
+}
 
         val currentCount =enrollmentRepository.countByCourseId(request.courseId)
 

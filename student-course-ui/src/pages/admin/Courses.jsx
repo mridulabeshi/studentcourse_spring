@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
-import { useToast } from "../components/Toast";
+import api from "../../services/api";
+import { useToast } from "../../components/Toast";
 
 function Courses() {
   const [courses, setCourses]       = useState([]);
