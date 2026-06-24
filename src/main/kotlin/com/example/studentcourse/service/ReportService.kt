@@ -27,97 +27,80 @@ class ReportService(
 ) {
 
     fun getDashboardStats(): DashboardStats {
-
         return DashboardStats(
-            students = studentRepository.count(),
-            courses = courseRepository.count(),
+            students    = studentRepository.count(),
+            courses     = courseRepository.count(),
             enrollments = enrollmentRepository.count()
         )
     }
 
     fun getTopCourses(): List<CourseEnrollmentCount> {
-
         val enrollments = enrollmentRepository.findAll()
-
         return enrollments
             .groupBy { it.course?.title ?: "Unknown" }
             .map {
                 CourseEnrollmentCount(
-                    courseTitle = it.key,
+                    courseTitle      = it.key,
                     totalEnrollments = it.value.size.toLong()
                 )
             }
-            .sortedByDescending {
-                it.totalEnrollments
-            }
+            .sortedByDescending { it.totalEnrollments }
     }
 
-    fun getAttendancePercentage(
-        enrollmentId: Long
-    ): AttendanceReport {
-
-        val attendanceList =
-            attendanceRepository.findByEnrollmentId(
-                enrollmentId
-            )
-
-        val totalClasses =
-            attendanceList.size
-
-        val presentClasses =
-            attendanceList.count {
-                it.present
-            }
-
-        val percentage =
-            if (totalClasses == 0)
-                0.0
-            else
-                (presentClasses.toDouble() / totalClasses) * 100
+    fun getAttendancePercentage(enrollmentId: Long): AttendanceReport {
+        val attendanceList   = attendanceRepository.findByEnrollmentId(enrollmentId)
+        val totalClasses     = attendanceList.size
+        val presentClasses   = attendanceList.count { it.present }
+        val percentage       =
+            if (totalClasses == 0) 0.0
+            else (presentClasses.toDouble() / totalClasses) * 100
 
         return AttendanceReport(
             enrollmentId = enrollmentId,
-            percentage = percentage
+            percentage   = percentage
         )
     }
 
-    fun getStudentPerformance(
-        studentId: Long
-    ): StudentPerformance {
-
-        val grades =
-            gradeRepository
-                .findByEnrollmentStudentId(
-                    studentId
-                )
+    fun getStudentPerformance(studentId: Long): StudentPerformance {
+        val grades = gradeRepository.findByEnrollmentStudentId(studentId)
 
         if (grades.isEmpty()) {
             return StudentPerformance(
-                studentId = studentId,
+                studentId    = studentId,
                 averageScore = 0.0
             )
         }
 
-        val avg =
-            grades.map {
+        // Grade point lookup (10-point scale)
+        val gradePoints = mapOf(
+            "S" to 10.0,
+            "A" to 9.0,
+            "B" to 8.0,
+            "C" to 7.0,
+            "D" to 6.0,
+            "E" to 5.0
+        )
 
-                when (it.grade.uppercase()) {
+        // Credit-weighted CGPA = Σ(gradePoints × credits) / Σ(credits)
+        var totalWeighted = 0.0
+        var totalCredits  = 0
 
-                    "S" -> 10
-                    "A" -> 9
-                    "B" -> 8
-                    "C" -> 7
-                    "D" -> 6
-                    "E" -> 5
+        grades.forEach { grade ->
+            val points  = gradePoints[grade.grade.uppercase()] ?: 0.0
+            val credits = grade.enrollment?.course?.credits ?: 0
+            if (credits > 0) {
+                totalWeighted += points * credits
+                totalCredits  += credits
+            }
+        }
 
-                    else -> 0
-                }
-
-            }.average()
+        val cgpa =
+            if (totalCredits == 0) 0.0
+            else totalWeighted / totalCredits
 
         return StudentPerformance(
-            studentId = studentId,
-            averageScore = avg
+            studentId    = studentId,
+            averageScore = cgpa   // field reused for CGPA
         )
     }
 }
